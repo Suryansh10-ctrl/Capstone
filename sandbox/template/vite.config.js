@@ -8,14 +8,20 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     allowedHosts: true,
+    hmr: false,
     watch: {
       usePolling: true,
-      interval: 300,
-      ignored: [ 'node_modules' ]
-    },
-    hmr: {
-      clientPort: 80
+      interval: 1000,
+      ignored: [
+        '**/node_modules/**',
+        '**/.git/**',
+        '**/dist/**',
+        '**/.vite/**'
+      ]
     }
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react/jsx-runtime'],
+    force: false
   }
 })
-

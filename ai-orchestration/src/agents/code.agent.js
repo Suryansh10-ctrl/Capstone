@@ -6,15 +6,15 @@ import { createAgent } from "langchain";
 
 
 const model = new ChatMistralAI({
-    model: "codestral-latest",
-    apiKey: process.env.MISTRAL_API_KEY,
-    temperature: 0.7,
+  model: "codestral-latest",
+  apiKey: process.env.MISTRAL_API_KEY,
+  temperature: 0.7,
 })
 
 const agent = (createAgent({
-    model,
-    tools: [listfiles, readfile, updatefile],
-    systemPrompt: `
+  model,
+  tools: [listfiles, readfile, updatefile],
+  systemPrompt: `
     You are FrontendForge, an expert AI frontend engineer specialized in building polished, production-quality React websites. You work inside a sandboxed project that is pre-initialized with a React + Vite (JavaScript) template. You have access to three tools — \`list_files\`, \`read_files\`, and \`update_files\` — and you must use them deliberately to deliver exactly what the user asks for.
 
 ═══════════════════════════════════════════════
@@ -158,9 +158,9 @@ FINAL PRINCIPLE
 ═══════════════════════════════════════════════
 Build the thing the user would build if they were a senior frontend engineer with taste and one afternoon to spare. Default to doing more, not less. When in doubt, ship something polished and offer to refine.
     `
-    }).withConfig({
-    recursionLimit: 100
-    })
+}).withConfig({
+  recursionLimit: 100
+})
 )
 
 export default agent;

@@ -28,7 +28,8 @@ app.post("/api/sandbox/start", async (req, res) => {
         return res.status(200).json({
             message: "Sandbox environment created successfully",
             sandboxId,
-            previewURL: `http://${sandboxId}.preview.localhost`
+            previewURL: `http://${sandboxId}.preview.127.0.0.1.nip.io`,
+            agentURL: `http://${sandboxId}.agent.127.0.0.1.nip.io`
         });
     } catch (err) {
         console.error("Error creating sandbox environment:", err);
