@@ -109,3 +109,10 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+
+/* Custom Webkit Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.4); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(168, 85, 247, 0.7); }

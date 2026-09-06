@@ -1,4 +1,4 @@
-import { k8sCorev1Api } from "./config.js";
+﻿import { k8sCorev1Api } from "./config.js";
 
 export async function createPod(sandboxId) {
     const podManifest = {
@@ -30,15 +30,15 @@ export async function createPod(sandboxId) {
                     ]
                 }
             ],
-            containers :[
+            containers: [
                 {
                     image: "template:latest",
                     imagePullPolicy: "IfNotPresent",
                     name: "sandbox-container",
-                    ports: [{containerPort: 5173, name: "http"}],
+                    ports: [{ containerPort: 5173, name: "http" }],
                     resources: {
-                        limits: {cpu: "500m",memory: "1Gi"},
-                        requests: {cpu: "250m", memory: "500Mi"}
+                        limits: { cpu: "500m", memory: "512Mi" },
+                        requests: { cpu: "50m", memory: "100Mi" }
                     },
                     volumeMounts: [
                         {
@@ -51,10 +51,10 @@ export async function createPod(sandboxId) {
                     image: "agent:latest",
                     imagePullPolicy: "IfNotPresent",
                     name: "agent-container",
-                    ports: [{containerPort: 3000, name: "agent-http"}],
+                    ports: [{ containerPort: 3000, name: "agent-http" }],
                     resources: {
-                        limits: {cpu: "500m",memory: "1Gi"},
-                        requests: {cpu: "250m", memory: "500Mi"}
+                        limits: { cpu: "500m", memory: "512Mi" },
+                        requests: { cpu: "50m", memory: "100Mi" }
                     },
                     volumeMounts: [
                         {
@@ -65,13 +65,12 @@ export async function createPod(sandboxId) {
                 }
             ]
         }
-    }
+    };
 
     const response = await k8sCorev1Api.createNamespacedPod({
         namespace: 'default',
         body: podManifest
-    })
+    });
 
     return response;
 }
-

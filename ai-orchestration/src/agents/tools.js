@@ -3,62 +3,105 @@ import { config } from "dotenv";
 import { tool } from "langchain";
 import * as z from "zod";
 
+const BINARY_AND_HEAVY_EXTS = [
+    ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".woff", ".woff2", ".ttf", ".eot", ".pdf", ".zip",
+    "package-lock.json", "yarn.lock", "pnpm-lock.yaml"
+];
 
+function isReadableCodeFile(filepath) {
+    if (!filepath || typeof filepath !== "string") return false;
+    const lower = filepath.toLowerCase();
+    return !BINARY_AND_HEAVY_EXTS.some(ext => lower.endsWith(ext));
+}
 
 export const listfiles = tool(
-    async ({ },config) => {
-        const writer = config.writer
-        writer("Listing files \n")
-        const response = await axios.get(`http://sandbox-service-${config.context.projectId}:3000/list-files`)
+    async ({ }, config) => {
+        const writer = config.writer;
+        writer("🔍 Inspecting project files...\n");
+        try {
+            const response = await axios.get(
+                `http://sandbox-service-${config.context.projectId}:3000/list-files`,
+                { timeout: 8000 }
+            );
 
-        writer("files listed successfully " + "Files: " +  response.data.files.join(",") + "\n")
-        return JSON.stringify(response.data.files);
+            const count = response.data?.files?.length || 0;
+            writer(`📁 Found ${count} project files\n`);
+            return JSON.stringify(response.data.files || []);
+        } catch (err) {
+            writer("⚠️ Failed to list files\n");
+            return JSON.stringify({ error: err.message });
+        }
     },
     {
         name: "list_files",
-        description: "List all the files in the project directory. This is useful for understanding what files are available to work with.",
+        description: "List all files in the project directory.",
         schema: z.object({})
     }
-)
+);
 
 export const readfile = tool(
-    async ({ files },config) => {
+    async ({ files }, config) => {
         const writer = config.writer;
-        const fileList = Array.isArray(files) ? files.join(",") : files;
-        writer("Reading files \n" + fileList + "\n");
+        let fileArr = Array.isArray(files) ? files : [files];
         
-        const response = await axios.get(`http://sandbox-service-${config.context.projectId}:3000/read-file?files=`+ encodeURIComponent(fileList))
+        // Filter out binary assets and massive lockfiles to prevent timeouts
+        fileArr = fileArr.filter(isReadableCodeFile).slice(0, 5);
 
-        writer("Files read successfully \n")
-        return JSON.stringify(response.data);
+        if (fileArr.length === 0) {
+            writer("ℹ️ No readable source files requested\n");
+            return JSON.stringify({ files: {} });
+        }
+
+        const fileListStr = fileArr.join(", ");
+        writer(`📖 Reading ${fileListStr}...\n`);
+
+        try {
+            const response = await axios.get(
+                `http://sandbox-service-${config.context.projectId}:3000/read-file?files=` + encodeURIComponent(fileArr.join(",")),
+                { timeout: 12000 }
+            );
+
+            writer("✓ Files read successfully\n");
+            return JSON.stringify(response.data);
+        } catch (err) {
+            writer(`⚠️ Could not read files: ${err.message}\n`);
+            return JSON.stringify({ error: `Failed to read files: ${err.message}` });
+        }
     },
     {
         name: "read_files",
-        description: "Read the content of a file. This is useful for understanding the content of a file.",
+        description: "Read the content of code files (e.g. src/App.jsx, src/index.css). Do NOT read images or lockfiles.",
         schema: z.object({
-            files: z.array(z.string()).describe("The list of files relative paths to read. These should be files that were listed using the list_files tool or created later")
+            files: z.array(z.string()).describe("List of relative file paths to read. Limit to specific relevant source code files.")
         })
     }
-)
+);
 
 export const updatefile = tool(
-    async ({ file, content },config) => {
+    async ({ file, content }, config) => {
         const writer = config.writer;
-        writer(`Updating file: ${file}\n`);
+        writer(`✏️ Updating ${file}...\n`);
 
-        const response = await axios.patch(`http://sandbox-service-${config.context.projectId}:3000/update-file`, {
-            updates: [{ file, content }]
-        })
+        try {
+            const response = await axios.patch(
+                `http://sandbox-service-${config.context.projectId}:3000/update-file`,
+                { updates: [{ file, content }] },
+                { timeout: 12000 }
+            );
 
-        writer("files updated successfully. \n" )
-        return JSON.stringify(response.data);
+            writer(`✓ Saved ${file}\n`);
+            return JSON.stringify(response.data);
+        } catch (err) {
+            writer(`⚠️ Failed to update ${file}: ${err.message}\n`);
+            return JSON.stringify({ error: `Failed to update ${file}: ${err.message}` });
+        }
     },
     {
         name: "update_files",
-        description: "Update the content of a file. This is useful for modifying the content of a file. This tool can also use to create new files by providing a new file path and content. The tool will create the file if it does not exist.",
+        description: "Update or create a file in the project. The content must be a valid string.",
         schema: z.object({
-            file: z.string().describe("The path of the file to update"),
-            content: z.string().describe("The new content for the file, the content should should support json format")
+            file: z.string().describe("Relative path of the file to update/create"),
+            content: z.string().describe("Full file content string")
         })
     }
-)
+);
