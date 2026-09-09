@@ -11,6 +11,11 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
     nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
     nginx.ingress.kubernetes.io/upstream-hash-by: "$remote_addr"
+
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingrix.kubernetes.io/session-cookie-name: "route"
+    ngnix.ingress.kubernetes.io/session-cookie-path: "/"
+
 spec:
   ingressClassName: nginx
   rules:
@@ -31,6 +36,16 @@ spec:
             backend:
               service:
                 name: ai-service
+                port:
+                  number: 80
+    
+    - http:
+        paths:
+          - path: /api/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
                 port:
                   number: 80
 
