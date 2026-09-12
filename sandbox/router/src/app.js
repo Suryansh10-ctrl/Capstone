@@ -1,6 +1,7 @@
 import express from "express";
 import morgan from "morgan";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import { refreshTTL } from "./config/redis.js";
 
 const app = express();
 
@@ -71,7 +72,7 @@ export function getAgentProxy(sandboxId) {
     return agentProxies[sandboxId];
 }
 
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
     const rawHost = req.get("host");
     
     if (!rawHost) {
@@ -82,6 +83,7 @@ app.use((req, res, next) => {
     const parts = host.split(".");
     const sandboxId = parts[0];
     const type = parts[1];
+    await refreshTTL(sandboxId);
 
     if (type === "agent") {
         return getAgentProxy(sandboxId)(req, res, next);

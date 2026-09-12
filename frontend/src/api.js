@@ -1,4 +1,4 @@
-// Sandbox API utilities
+﻿// Sandbox API utilities
 const BASE_API = '';
 
 // In-flight promise cache to deduplicate simultaneous requests (e.g. Explorer + Editor)
@@ -53,16 +53,18 @@ export async function waitForSandboxReady(agentURL, maxAttempts = 30, delay = 18
 }
 
 /**
- * Helper to ensure preview and agent URLs target the active port-forwarded ingress port (8000)
- * when running locally without explicit port numbers.
+ * Keep the sandbox URL exactly as returned by the backend.
+ * Ingress handles routing for *.agent.localhost and *.preview.localhost.
  */
+
 export function formatSandboxUrl(url) {
   if (!url) return url;
+
   try {
     const parsed = new URL(url);
-    if (!parsed.port || parsed.port === '80') {
-      parsed.port = '8000';
-    }
+
+    // Keep the URL returned by the backend.
+    // Ingress handles the agent/preview hostname.
     return parsed.toString().replace(/\/$/, '');
   } catch (_) {
     return url;
@@ -171,7 +173,7 @@ export async function updateFile(agentURL, filePath, content) {
  * @param {(text: string, isStatus: boolean) => void} onChunk
  * @param {() => void} onDone
  * @param {(err: string) => void} onError
- * @returns {AbortController} — call .abort() to cancel
+ * @returns {AbortController} â€” call .abort() to cancel
  */
 export function invokeAI(message, projectId, onChunk, onDone, onError) {
   const controller = new AbortController();

@@ -1,4 +1,4 @@
-apiVersion: apps/v1
+﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
   name:  sandbox-deployment
@@ -32,6 +32,14 @@ spec:
             port: 3000
           initialDelaySeconds: 90
           timeoutSeconds: 10
+        env:
+          - name: REDIS_URL
+            valueFrom: 
+              secretKeyRef: 
+                name: database
+                key: REDIS_URL
+          - name: SANDBOX_HOST
+            value: "127.0.0.1.nip.io"
         readinessProbe:
           httpGet:
             path: /api/sandbox/health

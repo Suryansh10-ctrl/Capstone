@@ -4,6 +4,7 @@ import { createPod } from "./kubernetes/pod.js";
 import { createService } from "./kubernetes/service.js";
 import { cleanupOldSandboxes, getSandboxStatus } from "./kubernetes/cleanup.js";
 import { v7 as uuid } from "uuid";
+import { createSandboxKey } from "./config/redis.js";
 
 const app = express();
 
@@ -37,14 +38,16 @@ app.post("/api/sandbox/start", async (req, res) => {
 
         await Promise.all([
             createPod(sandboxId),
-            createService(sandboxId)
+            createService(sandboxId),
+            createSandboxKey(sandboxId)
         ]);
 
+        const sandboxHost = process.env.SANDBOX_HOST || "localhost";
         return res.status(200).json({
             message: "Sandbox environment created successfully",
             sandboxId,
-            previewURL: `http://${sandboxId}.preview.127.0.0.1.nip.io`,
-            agentURL: `http://${sandboxId}.agent.127.0.0.1.nip.io`
+            previewURL: `http://${sandboxId}.preview.${sandboxHost}`,
+            agentURL: `http://${sandboxId}.agent.${sandboxHost}`
         });
     } catch (err) {
         console.error("Error creating sandbox environment:", err);

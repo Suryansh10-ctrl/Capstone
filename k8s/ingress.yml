@@ -13,8 +13,8 @@ metadata:
     nginx.ingress.kubernetes.io/upstream-hash-by: "$remote_addr"
 
     nginx.ingress.kubernetes.io/affinity: "cookie"
-    nginx.ingrix.kubernetes.io/session-cookie-name: "route"
-    ngnix.ingress.kubernetes.io/session-cookie-path: "/"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+    nginx.ingress.kubernetes.io/session-cookie-path: "/"
 
 spec:
   ingressClassName: nginx
